@@ -1,3 +1,5 @@
+# Prepare the dataset by verifying images, mapping categories, and splitting into train, validation, and test sets.
+
 from pathlib import Path
 import csv
 
