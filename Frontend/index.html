@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#fff7fb">
+    <meta name="description" content="Discover new ways to wear what you own with FashionMind AI, your personal digital stylist.">
+    <title>FashionMind AI — Your closet, reimagined</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <nav class="navigation page-shell" aria-label="Main navigation">
+        <a class="wordmark" href="#home" aria-label="FashionMind AI home">
+          <span class="brand-sparkle" aria-hidden="true">✦</span>
+          <span>fashionmind<span class="brand-ai">.ai</span></span>
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open navigation menu">
+          <span></span><span></span>
+        </button>
+        <div class="nav-links" id="nav-links">
+          <a class="nav-link active" href="#home">Home</a>
+          <a class="nav-link" href="#stylist">AI Stylist</a>
+          <a class="nav-link" href="#closet">My Closet</a>
+          <a class="nav-link" href="#daily-edit">Saved Outfits</a>
+          <a class="nav-link" href="#about">About</a>
+          <a class="button button-small button-primary nav-cta" href="#stylist">Style Me <span aria-hidden="true">✧</span></a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero page-shell" id="home" aria-labelledby="hero-title">
+        <div class="hero-copy reveal">
+          <div class="game-hud" aria-label="Style quest one, three hearts">
+            <span class="hud-level">STYLE QUEST <b>001</b></span>
+            <span class="hud-hearts" aria-hidden="true">♥ ♥ ♥</span>
+          </div>
+          <p class="eyebrow"><span class="eyebrow-mark">✳</span> Your personal digital stylist</p>
+          <h1 id="hero-title">Your closet.<br>Your <em>aesthetic.</em><br>Your AI stylist.</h1>
+          <p class="hero-description">Discover new ways to wear what you own. Find your aesthetic, explore outfit combinations, and make getting dressed your favorite part of the day.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#stylist">Style Me <span aria-hidden="true">✧</span></a>
+            <a class="button button-outline" href="#closet">Explore the Closet <span aria-hidden="true">↘</span></a>
+          </div>
+          <div class="hero-footnote"><span class="pixel-heart" aria-hidden="true">♥</span> Made for the love of getting dressed <span class="footnote-line"></span><span class="pixel-hint">PRESS START</span></div>
+        </div>
+
+        <div class="hero-art reveal" aria-label="Fashion moodboard featuring a romantic pink outfit">
+          <div class="hero-orbit orbit-one"></div>
+          <div class="hero-orbit orbit-two"></div>
+          <div class="hero-photo hero-photo-main">
+            <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Model in a soft pink editorial outfit" fetchpriority="high">
+          </div>
+          <div class="hero-photo hero-photo-detail">
+            <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&amp;fit=crop&amp;w=500&amp;q=85" alt="Fashion styling detail in warm tones">
+          </div>
+          <span class="pixel-bow hero-bow" aria-hidden="true"><i></i><b></b><i></i></span>
+          <div class="mood-sticker"><span class="sticker-star">✳</span><span>TODAY'S MOOD</span><strong>coquette</strong></div>
+          <div class="era-label"><span>YOUR STYLE ERA</span><strong>✧ 01 / 04</strong></div>
+          <div class="outfit-label">OUTFIT INSPO <span>#001</span></div>
+          <span class="hero-doodle doodle-heart" aria-hidden="true">♡</span>
+          <span class="hero-doodle doodle-star" aria-hidden="true">✦</span>
+          <span class="hero-doodle doodle-spark" aria-hidden="true">✧</span>
+          <span class="pixel-sparkle hero-sparkle-one" aria-hidden="true">✦</span>
+          <span class="pixel-sparkle hero-sparkle-two" aria-hidden="true">✧</span>
+          <span class="hero-caption">a little outfit daydream <span>↗</span></span>
+        </div>
+      </section>
+
+      <div class="ticker" aria-label="FashionMind inspiration">
+        <div class="ticker-track" aria-hidden="true">
+          <span>GET DRESSED LIKE YOU</span><i>✦</i><span>REWEAR WITH LOVE</span><i>♡</i><span>MAKE YOUR OWN MAGIC</span><i>✦</i><span>GET DRESSED LIKE YOU</span><i>♡</i><span>REWEAR WITH LOVE</span><i>✦</i>
+        </div>
+      </div>
+
+      <section class="daily-section section-pad" id="daily-edit" aria-labelledby="daily-title">
+        <div class="page-shell">
+          <div class="section-heading reveal">
+            <div>
+              <p class="eyebrow">The daily edit · your dose of style</p>
+              <h2 id="daily-title">A little inspiration<br>for your <em>next outfit.</em></h2>
+            </div>
+            <p class="heading-aside">Three moods, a million ways<br>to make them your own <span aria-hidden="true">↙</span></p>
+          </div>
+          <div class="editorial-grid">
+            <article class="editorial-card editorial-tall reveal">
+              <a class="editorial-image" href="#stylist" aria-label="Explore the Coquette Dream look">
+                <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Romantic fashion styling with soft layers" loading="lazy">
+                <span class="image-index">01 / ROMANTIC MOOD</span>
+                <span class="image-arrow" aria-hidden="true">↗</span>
+              </a>
+              <div class="editorial-meta"><div><h3>Coquette Dream</h3><p>Soft details, sweeter days, and a bow for good measure.</p></div><span class="editorial-symbol" aria-hidden="true">♡</span></div>
+            </article>
+            <article class="editorial-card editorial-offset reveal">
+              <a class="editorial-image" href="#stylist" aria-label="Explore the Off-Duty Model look">
+                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&amp;fit=crop&amp;w=800&amp;q=85" alt="Relaxed modern street-style outfit" loading="lazy">
+                <span class="image-index">02 / EVERYDAY ICON</span>
+                <span class="image-arrow" aria-hidden="true">↗</span>
+              </a>
+              <div class="editorial-meta"><div><h3>Off-Duty Model</h3><p>Easy layers. Good denim. Absolutely no overthinking.</p></div><span class="editorial-symbol" aria-hidden="true">✳</span></div>
+            </article>
+            <article class="editorial-card editorial-tall reveal">
+              <a class="editorial-image" href="#stylist" aria-label="Explore the Y2K Revival look">
+                <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Playful contemporary fashion with nostalgic details" loading="lazy">
+                <span class="image-index">03 / A LITTLE NOSTALGIA</span>
+                <span class="image-arrow" aria-hidden="true">↗</span>
+              </a>
+              <div class="editorial-meta"><div><h3>Y2K Revival</h3><p>Baby tees, shiny things, and main-character energy.</p></div><span class="editorial-symbol" aria-hidden="true">✦</span></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="stylist-section section-pad" id="stylist" aria-labelledby="stylist-title">
+        <div class="page-shell stylist-layout">
+          <div class="stylist-copy reveal">
+            <p class="eyebrow">The outfit remix · coming soon</p>
+            <h2 id="stylist-title">One piece.<br><em>Endless</em><br>possibilities.</h2>
+            <p>Start with something you already own and imagine new ways to style it. Your favorite piece deserves an encore.</p>
+            <a class="text-link" href="#closet">Take a peek inside <span aria-hidden="true">↗</span></a>
+            <span class="hand-note">your closet called ♡</span>
+          </div>
+          <div class="stylist-preview reveal">
+            <div class="preview-topline"><span>FM.AI / STYLE LAB</span><span class="preview-dot"><i></i> CONCEPT PREVIEW</span></div>
+            <div class="preview-body">
+              <div class="preview-piece">
+                <span class="micro-label">YOUR PIECE</span>
+                <div class="piece-image">
+                  <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=600&amp;q=85" alt="Soft pink knit sweater, shown as a sample closet piece" loading="lazy">
+                </div>
+                <span class="piece-tag">♡ &nbsp; A closet favorite</span>
+              </div>
+              <div class="preview-details">
+                <p class="micro-label">STYLE NOTES <span>01 — 03</span></p>
+                <div class="detail-row"><span>EXAMPLE CATEGORY</span><strong>TOPS <b>↗</b></strong></div>
+                <div class="detail-row"><span>EXAMPLE COLOR</span><strong><i class="color-chip"></i> SOFT PINK</strong></div>
+                <div class="looks-label">THREE WAYS TO WEAR IT <span>✦</span></div>
+                <div class="look-thumbnails">
+                  <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&amp;fit=crop&amp;w=180&amp;q=75" alt="Sample outfit idea one" loading="lazy">
+                  <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&amp;fit=crop&amp;w=180&amp;q=75" alt="Sample outfit idea two" loading="lazy">
+                  <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&amp;fit=crop&amp;w=180&amp;q=75" alt="Sample outfit idea three" loading="lazy">
+                </div>
+                <button class="button button-primary preview-button" type="button" data-coming-soon>Discover Your Style <span aria-hidden="true">✧</span></button>
+              </div>
+            </div>
+            <span class="preview-corner" aria-hidden="true">✦</span>
+            <span class="preview-footnote">* Sample visual only — the stylist is getting dressed.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="closet-section section-pad" id="closet" aria-labelledby="closet-title">
+        <div class="page-shell">
+          <div class="closet-heading reveal">
+            <div>
+              <p class="eyebrow">A closet full of possibilities</p>
+              <h2 id="closet-title">Your wardrobe,<br><em>reimagined.</em></h2>
+            </div>
+            <div class="closet-intro"><p>Keep your favorite pieces close and find fresh combinations hiding in plain sight.</p><span class="closet-scribble">wear it again, differently ↙</span></div>
+          </div>
+          <div class="filter-bar reveal" role="group" aria-label="Filter closet items">
+            <span class="filter-caption">BROWSE BY</span>
+            <button class="filter-button is-selected" type="button" data-filter="all" aria-pressed="true">All pieces <span>06</span></button>
+            <button class="filter-button" type="button" data-filter="tops" aria-pressed="false">Tops</button>
+            <button class="filter-button" type="button" data-filter="bottoms" aria-pressed="false">Bottoms</button>
+            <button class="filter-button" type="button" data-filter="jackets" aria-pressed="false">Jackets</button>
+            <button class="filter-button" type="button" data-filter="dresses" aria-pressed="false">Dresses</button>
+            <span class="filter-count">A VERY GOOD EDIT <span aria-hidden="true">✦</span></span>
+          </div>
+          <div class="closet-grid">
+            <article class="closet-item reveal" data-category="tops"><div class="closet-image closet-pink"><img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&amp;fit=crop&amp;w=500&amp;q=80" alt="Pink knit cardigan" loading="lazy"><span class="item-heart" aria-hidden="true">♡</span></div><div class="item-caption"><div><h3>The soft-knit cardi</h3><span>TOPS · BLUSH</span></div><span class="item-number">01</span></div></article>
+            <article class="closet-item reveal" data-category="tops"><div class="closet-image closet-cream"><img src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&amp;fit=crop&amp;w=500&amp;q=80" alt="Classic white blouse" loading="lazy"><span class="item-heart" aria-hidden="true">♡</span></div><div class="item-caption"><div><h3>Sunday's white shirt</h3><span>TOPS · CREAM</span></div><span class="item-number">02</span></div></article>
+            <article class="closet-item reveal" data-category="bottoms"><div class="closet-image closet-blue"><img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&amp;fit=crop&amp;w=500&amp;q=80" alt="Classic blue denim jeans" loading="lazy"><span class="item-heart" aria-hidden="true">♡</span></div><div class="item-caption"><div><h3>Favorite blue jeans</h3><span>BOTTOMS · DENIM</span></div><span class="item-number">03</span></div></article>
+            <article class="closet-item reveal" data-category="bottoms"><div class="closet-image closet-rose"><img src="https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&amp;fit=crop&amp;w=500&amp;q=80" alt="Flowing skirt in a soft neutral tone" loading="lazy"><span class="item-heart" aria-hidden="true">♡</span></div><div class="item-caption"><div><h3>The twirl-around skirt</h3><span>BOTTOMS · PETAL</span></div><span class="item-number">04</span></div></article>
+            <article class="closet-item reveal" data-category="jackets"><div class="closet-image closet-sand"><img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&amp;fit=crop&amp;w=500&amp;q=80" alt="Timeless everyday jacket" loading="lazy"><span class="item-heart" aria-hidden="true">♡</span></div><div class="item-caption"><div><h3>Borrowed-from-you jacket</h3><span>JACKETS · CLASSIC</span></div><span class="item-number">05</span></div></article>
+            <article class="closet-item reveal" data-category="dresses"><div class="closet-image closet-lilac"><img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&amp;fit=crop&amp;w=500&amp;q=80" alt="Light summer dress" loading="lazy"><span class="item-heart" aria-hidden="true">♡</span></div><div class="item-caption"><div><h3>Plans-at-six dress</h3><span>DRESSES · DAYDREAM</span></div><span class="item-number">06</span></div></article>
+          </div>
+          <p class="closet-disclaimer reveal">A little sample closet, styled with love <span aria-hidden="true">♡</span></p>
+        </div>
+      </section>
+
+      <section class="closing-section" id="about" aria-labelledby="closing-title">
+        <div class="closing-inner page-shell reveal">
+          <span class="closing-spark closing-spark-one" aria-hidden="true">✦</span>
+          <span class="closing-spark closing-spark-two" aria-hidden="true">✧</span>
+          <span class="pixel-bow closing-bow" aria-hidden="true"><i></i><b></b><i></i></span>
+          <span class="pixel-sparkle closing-sparkle" aria-hidden="true">✦</span>
+          <div class="closing-stamp"><span>FASHION</span><strong>♡</strong><span>FEELS</span></div>
+          <p class="eyebrow">A little magic, a lot more you</p>
+          <h2 id="closing-title">Your next favorite<br>outfit <em>starts here.</em></h2>
+          <p>Make room for creativity. Rediscover your closet. Dress like yourself.</p>
+          <button class="button button-dark" type="button" data-coming-soon>Let's Style Something <span aria-hidden="true">✧</span></button>
+          <span class="closing-pixel" aria-hidden="true">♥</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="page-shell footer-main">
+        <div class="footer-brand">
+          <a class="wordmark" href="#home"><span class="brand-sparkle" aria-hidden="true">✦</span><span>fashionmind<span class="brand-ai">.ai</span></span></a>
+          <p>A little more magic<br>in your wardrobe.</p>
+        </div>
+        <div class="footer-links">
+          <span class="footer-label">A FEW SHORTCUTS</span>
+          <a href="#home">Home</a>
+          <a href="#about">About</a>
+          <a href="#daily-edit">Saved Outfits</a>
+        </div>
+        <a class="back-to-top" href="#home">BACK TO THE TOP <span aria-hidden="true">↑</span></a>
+      </div>
+      <div class="footer-bottom page-shell"><span>© 2026 FASHIONMIND AI · MADE WITH A LITTLE EXTRA ✧</span><span>NOT A REAL STYLIST (YET) <b>♡</b></span></div>
+    </footer>
+    <div class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
