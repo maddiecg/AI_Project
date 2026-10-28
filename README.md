@@ -1,7 +1,5 @@
 # AI_Project
 
-# AI_Project
-
 ## Project Description:
 We propose developing an AI-powered clothing classification and outfit recommendation system. Given a user-uploaded clothing image, a computer vision model will identify the primary clothing category, focusing on tops, bottoms, jackets, and dresses. We will fine-tune a pretrained vision model, such as a Vision Transformer (ViT), using a labeled fashion dataset.
 After classification, the system will extract additional clothing characteristics such as color and style. A fashion-specific vision model such as FashionCLIP may be used to help identify style-related attributes. The recommendation system will then combine these attributes with predefined fashion principles, including color compatibility, structural style, and clothing-category compatibility.
