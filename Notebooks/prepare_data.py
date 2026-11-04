@@ -1,261 +1,164 @@
+"""Designer AI: match images to labels and prepare the dataset for training.
 
-# Prepare clothing data for the Designer AI project.
-# Verifies images, maps categories, and creates train/validation/test sets.
+Run from the main project folder:
+    python Notebooks/prepare_data.py
+
+Creates Data/prepared/train.csv, validation.csv, and test.csv.
+"""
 
 from pathlib import Path
-import csv
-
 import pandas as pd
 from PIL import Image
 from sklearn.model_selection import train_test_split
 
-
-# PROJECT PATHS
-# This file stays inside the Notebooks folder.
+# Keep this script inside Notebooks. No folder changes are needed.
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-
-# Find the Data folder regardless of capitalization.
 DATA_DIR = PROJECT_DIR / "Data"
-
 if not DATA_DIR.is_dir():
     DATA_DIR = PROJECT_DIR / "data"
 
-CSV_PATH = DATA_DIR / "styles.csv"
-IMAGE_DIR = DATA_DIR / "images"
 OUTPUT_DIR = DATA_DIR / "prepared"
+SEED = 42  # Using the same seed gives the same split when the data is unchanged.
 
-SEED = 42
+# Clothing categories recognized by our model.
+CATEGORIES = ["bottoms", "dresses", "shoes", "tops"]
 
-# Map clothing article types to our four categories.
+# All footwear is included, including sandals and flip-flops.
+# These keys are lowercase so capitalization in styles.csv does not matter.
 CATEGORY_MAP = {
-    "Tshirts": "tops",
-    "Shirts": "tops",
-    "Tops": "tops",
-    "Sweatshirts": "tops",
-    "Sweaters": "tops",
-
-    "Jeans": "bottoms",
-    "Shorts": "bottoms",
-    "Trousers": "bottoms",
-    "Track Pants": "bottoms",
-    "Leggings": "bottoms",
-    "Capris": "bottoms",
-    "Skirts": "bottoms",
-    "Jeggings": "bottoms",
-
-    "Jackets": "jackets",
-    "Rain Jacket": "jackets",
-    "Blazers": "jackets",
-    "Nehru Jackets": "jackets",
-
-    "Dresses": "dresses",
+    "tshirts": "tops", "shirts": "tops", "tops": "tops",
+    "sweatshirts": "tops", "sweaters": "tops", "kurtas": "tops",
+    "tunics": "tops", "blouses": "tops", "hoodies": "tops",
+    "jeans": "bottoms", "shorts": "bottoms", "trousers": "bottoms",
+    "track pants": "bottoms", "leggings": "bottoms", "capris": "bottoms",
+    "skirts": "bottoms", "jeggings": "bottoms",
+    "dresses": "dresses", "dress": "dresses",
+    "casual shoes": "shoes", "sports shoes": "shoes",
+    "formal shoes": "shoes", "sneakers": "shoes",
+    "heels": "shoes", "flats": "shoes", "boots": "shoes",
+    "sandals": "shoes", "sports sandals": "shoes",
+    "flip flops": "shoes", "slippers": "shoes",
+    "loafers": "shoes", "wedges": "shoes", "booties": "shoes",
 }
 
-CATEGORIES = ["tops", "bottoms", "jackets", "dresses"]
 
-
-def find_dataset():
-    """Locate the CSV and image folder inside Data."""
-
+def find_files():
+    """Find styles.csv and the image folder, including extra extracted folders."""
     if not DATA_DIR.is_dir():
-        raise FileNotFoundError(
-            f"Data folder not found: {DATA_DIR}"
-        )
+        raise FileNotFoundError(f"Data folder not found: {DATA_DIR}")
 
-    csv_files = sorted(DATA_DIR.rglob("styles.csv"))
-
+    # Prefer Data/styles.csv, but allow a nested extracted directory.
+    csv_files = list(DATA_DIR.rglob("styles.csv"))
     if not csv_files:
-        raise FileNotFoundError(
-            "styles.csv was not found in Data. "
-            "Make sure the CSV ZIP file is extracted."
-        )
+        raise FileNotFoundError("No styles.csv found. Extract the Kaggle dataset first.")
+    csv_file = DATA_DIR / "styles.csv"
+    if not csv_file.is_file():
+        csv_file = sorted(csv_files)[0]
 
-    csv_path = csv_files[0]
-
-    image_folders = [
-        folder
-        for folder in DATA_DIR.rglob("*")
-        if folder.is_dir() and folder.name.lower() == "images"
-    ]
-
-    if IMAGE_DIR.is_dir():
-        image_folder = IMAGE_DIR
-    elif image_folders:
-        image_folder = image_folders[0]
-    else:
-        raise FileNotFoundError(
-            "Images folder not found in Data. "
-            "Make sure the image ZIP file is extracted."
-        )
-
-    return csv_path, image_folder
+    # Look for extracted folders named 'images'.
+    image_folders = [p for p in DATA_DIR.rglob("*")
+                     if p.is_dir() and p.name.lower() == "images"]
+    if not image_folders:
+        raise FileNotFoundError("No images folder found. Extract the image ZIP first.")
+    return csv_file, image_folders
 
 
 def main():
-
     print("Preparing Designer AI dataset...")
+    csv_file, image_folders = find_files()
 
-    csv_path, image_dir = find_dataset()
+    # Load product IDs as strings, because filenames are also ID strings.
+    data = pd.read_csv(csv_file, dtype={"id": str}, on_bad_lines="skip")
+    print(f"Original clothing items: {len(data)}")
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    # The CSV must include these columns. Color and usage are optional.
+    if not {"id", "articleType"}.issubset(data.columns):
+        raise ValueError("styles.csv must contain 'id' and 'articleType'.")
+    for column in ["baseColour", "usage"]:
+        if column not in data.columns:
+            data[column] = ""
 
-    print(f"CSV: {csv_path}")
-    print(f"Images: {image_dir}")
+    # Remove blank IDs and unknown clothing types.
+    data = data.dropna(subset=["id", "articleType"]).copy()
+    data["id"] = data["id"].str.strip()
+    data = data[data["id"] != ""].drop_duplicates(subset="id")
+    data["category"] = (
+        data["articleType"].astype(str).str.strip().str.lower().map(CATEGORY_MAP)
+    )
+    data = data.dropna(subset="category").copy()
+    print(f"Items in our four categories: {len(data)}")
 
-    # Find all clothing images.
-    image_paths = {}
-
-    for path in sorted(image_dir.rglob("*")):
-        if path.is_file() and path.suffix.lower() in {
-            ".jpg", ".jpeg", ".png"
-        }:
-            if path.stem not in image_paths:
-                image_paths[path.stem] = path
-
-    print(f"Found {len(image_paths)} images.")
+    # Create a lookup table from image filename (without .jpg) to its path.
+    # Search ALL extracted 'images' folders to avoid missing any clothing photos.
+    images = {}
+    for folder in image_folders:
+        for path in folder.rglob("*"):
+            if path.is_file() and path.suffix.lower() in {".jpg", ".jpeg", ".png"}:
+                images.setdefault(path.stem, path)
+    print(f"Images found: {len(images)}")
 
     records = []
-    malformed = 0
     missing = 0
     unreadable = 0
-    seen_ids = set()
 
-    # Read the dataset.
-    with csv_path.open(
-        encoding="utf-8-sig",
-        errors="replace",
-        newline=""
-    ) as file:
+    # Match every labeled item to an image and verify that it opens.
+    for _, item in data.iterrows():
+        item_id = str(item["id"])
+        path = images.get(item_id)
+        if path is None:
+            missing += 1
+            continue
+        try:
+            with Image.open(path) as image:
+                image.verify()
+        except (OSError, ValueError, SyntaxError):
+            unreadable += 1
+            continue
 
-        reader = csv.DictReader(file)
+        # These column names match train_model.py and modelEvaluation.py.
+        records.append({
+            "id": item_id,
+            "image_path": path.relative_to(PROJECT_DIR).as_posix(),
+            "category": item["category"],
+            "article_type": item["articleType"],
+            "color": "" if pd.isna(item["baseColour"]) else str(item["baseColour"]),
+            "usage": "" if pd.isna(item["usage"]) else str(item["usage"]),
+        })
 
-        required_columns = {
-            "id", "articleType", "baseColour", "usage"
-        }
+    prepared = pd.DataFrame(records)
+    if prepared.empty:
+        raise ValueError("No matching images found. Check Data/images and styles.csv.")
 
-        if not required_columns.issubset(
-            set(reader.fieldnames or [])
-        ):
-            raise ValueError(
-                "styles.csv is missing required columns."
-            )
-
-        for row in reader:
-
-            # Skip malformed rows.
-            if None in row or any(
-                value is None for value in row.values()
-            ):
-                malformed += 1
-                continue
-
-            article_type = row["articleType"].strip()
-            category = CATEGORY_MAP.get(article_type)
-
-            # Only keep the four project categories.
-            if category is None:
-                continue
-
-            item_id = row["id"].strip()
-
-            if not item_id or item_id in seen_ids:
-                continue
-
-            seen_ids.add(item_id)
-
-            # Match image to product ID.
-            image_path = image_paths.get(item_id)
-
-            if image_path is None:
-                missing += 1
-                continue
-
-            # Check that the image can be opened.
-            try:
-                with Image.open(image_path) as image:
-                    image.verify()
-
-            except (OSError, ValueError, SyntaxError):
-                unreadable += 1
-                continue
-
-            records.append({
-                "id": item_id,
-                "image_path": image_path.relative_to(
-                    PROJECT_DIR
-                ).as_posix(),
-                "category": category,
-                "article_type": article_type,
-                "color": row["baseColour"].strip(),
-                "usage": row["usage"].strip(),
-            })
-
-    if not records:
-        raise ValueError(
-            "No matching clothing images were found."
-        )
-
-    # Convert records into a DataFrame.
-    data = pd.DataFrame(records)
-
-    print(f"\nUsable clothing images: {len(data)}")
-
-    counts = data["category"].value_counts()
-
-    print("\nCategory counts:")
+    # Display how many items we have for each of the four categories.
+    counts = prepared["category"].value_counts().reindex(CATEGORIES, fill_value=0)
+    print(f"\nUsable clothing images: {len(prepared)}")
+    print("\nImages by category:")
     print(counts.to_string())
 
-    # Ensure all categories have enough examples.
-    if (
-        set(counts.index) != set(CATEGORIES)
-        or counts.min() < 10
-    ):
-        raise ValueError(
-            "Need at least 10 images in each category.\n"
-            f"{counts}"
-        )
+    # Stratified splitting needs enough examples of every category.
+    if (counts < 10).any():
+        raise ValueError("Each category needs at least 10 usable images to split.")
 
-    # Split dataset:
-    # 70% training
-    # 15% validation
-    # 15% testing
-
+    # 70% training / 15% validation / 15% testing.
+    # 'stratify' preserves approximately the same category proportions.
     train, remaining = train_test_split(
-        data,
-        test_size=0.30,
-        stratify=data["category"],
-        random_state=SEED,
+        prepared, test_size=0.30, random_state=SEED,
+        stratify=prepared["category"]
     )
-
     validation, test = train_test_split(
-        remaining,
-        test_size=0.50,
-        stratify=remaining["category"],
-        random_state=SEED,
+        remaining, test_size=0.50, random_state=SEED,
+        stratify=remaining["category"]
     )
 
-    # Save the prepared datasets.
-    for name, split in [
-        ("train", train),
-        ("validation", validation),
-        ("test", test),
-    ]:
+    # Save three CSV files for training and evaluation.
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    for name, split in [("train", train), ("validation", validation), ("test", test)]:
+        split.to_csv(OUTPUT_DIR / f"{name}.csv", index=False)
+        print(f"{name.capitalize()} images: {len(split)}")
 
-        output_path = OUTPUT_DIR / f"{name}.csv"
-
-        split.to_csv(output_path, index=False)
-
-        print(f"\n{name.upper()}: {len(split)} images")
-        print(split["category"].value_counts().to_string())
-
-    # Print processing summary.
-    print("\nDATA PREPARATION COMPLETE")
-
-    print(f"Skipped malformed rows: {malformed}")
-    print(f"Missing images: {missing}")
+    print(f"\nMissing images: {missing}")
     print(f"Unreadable images: {unreadable}")
-
-    print(f"\nSaved prepared files to: {OUTPUT_DIR}")
+    print(f"\nFiles saved to: {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":
