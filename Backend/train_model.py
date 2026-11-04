@@ -1,437 +1,174 @@
+"""Designer AI: train a MobileNetV2 model to classify clothing and footwear.
 
-"""
-Designer AI - Clothing Classification Model Training
-
-Trains a MobileNetV2 image classifier using transfer learning.
-
-Categories:
-    bottoms, dresses, jackets, tops
-
-Input:
-    Data/prepared/train.csv
-    Data/prepared/validation.csv
-
-Output:
-    Backend/clothing_model.keras
-    Backend/class_names.json
-    Backend/training_history.csv
-
-Run from the main project folder:
+Run AFTER prepare_data.py:
     python Backend/train_model.py
+
+Recognizes: bottoms, dresses, shoes, tops.
 """
 
 from pathlib import Path
 import json
 import random
-
 import numpy as np
 import pandas as pd
+# TensorFlow is used to train our clothing classification model.
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 
+# Keras provides the tools for building neural networks.
+keras = tf.keras
 
-# -------------------------------------------------
-# PROJECT SETTINGS
-# -------------------------------------------------
+# Layers are the building blocks of our AI model.
+layers = tf.keras.layers
 
+# Our model files are saved in Backend; our CSV files live in Data/prepared.
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BACKEND_DIR = Path(__file__).resolve().parent
-
 DATA_DIR = PROJECT_DIR / "Data"
-
 if not DATA_DIR.is_dir():
     DATA_DIR = PROJECT_DIR / "data"
-
 PREPARED_DIR = DATA_DIR / "prepared"
 
-TRAIN_CSV = PREPARED_DIR / "train.csv"
-VAL_CSV = PREPARED_DIR / "validation.csv"
+MODEL_FILE = BACKEND_DIR / "clothing_model.keras"
+CLASS_FILE = BACKEND_DIR / "class_names.json"
+HISTORY_FILE = BACKEND_DIR / "training_history.csv"
 
-MODEL_PATH = BACKEND_DIR / "clothing_model.keras"
-CLASSES_PATH = BACKEND_DIR / "class_names.json"
-HISTORY_PATH = BACKEND_DIR / "training_history.csv"
-
-# Must match the evaluation script.
-IMG_SIZE = (224, 224)
-
+# IMPORTANT: The order here determines the model's numeric class labels.
+CLASS_NAMES = ["bottoms", "dresses", "shoes", "tops"]
+IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 32
 EPOCHS = 10
 SEED = 42
-LEARNING_RATE = 0.001
 
-CLASS_NAMES = [
-    "bottoms",
-    "dresses",
-    "jackets",
-    "tops",
-]
-
-NUM_CLASSES = len(CLASS_NAMES)
-
-tf.random.set_seed(SEED)
-np.random.seed(SEED)
+# Fixed seeds make results more consistent between runs.
 random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
 
 
-# -------------------------------------------------
-# LOAD PREPARED DATA
-# -------------------------------------------------
+def load_csv(filename):
+    """Load labels and turn relative image paths into complete paths."""
+    path = PREPARED_DIR / filename
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing {path}. Run prepare_data.py first.")
 
-def load_data(csv_path):
-    """Read the CSV and verify image paths."""
+    data = pd.read_csv(path)
+    if not {"image_path", "category"}.issubset(data.columns):
+        raise ValueError(f"{filename} needs image_path and category columns.")
+    data = data.dropna(subset=["image_path", "category"]).copy()
+    if data.empty:
+        raise ValueError(f"{filename} has no usable rows.")
 
-    if not csv_path.is_file():
-        raise FileNotFoundError(
-            f"Missing dataset file: {csv_path}\n"
-            "Run Notebooks/prepare_data.py first."
-        )
+    # Every category in the CSV must be one of the four expected classes.
+    unexpected = set(data["category"]) - set(CLASS_NAMES)
+    if unexpected:
+        raise ValueError(f"Unexpected categories in {filename}: {unexpected}")
 
-    df = pd.read_csv(
-        csv_path,
-        dtype={"id": str}
+    data["full_path"] = data["image_path"].apply(
+        lambda p: str(PROJECT_DIR / str(p))
     )
-
-    required = {"image_path", "category"}
-
-    if not required.issubset(df.columns):
-        raise ValueError(
-            f"{csv_path.name} must contain "
-            "image_path and category columns."
-        )
-
-    df = df.dropna(
-        subset=["image_path", "category"]
-    ).copy()
-
-    df["category"] = (
-        df["category"].astype(str).str.strip()
-    )
-
-    unknown = set(df["category"]) - set(CLASS_NAMES)
-
-    if unknown:
-        raise ValueError(
-            f"Unexpected categories: {unknown}"
-        )
-
-    def resolve_image_path(value):
-        path = Path(str(value).replace("\\", "/"))
-
-        if path.is_absolute():
-            return path
-
-        return PROJECT_DIR / path
-
-    df["full_path"] = df["image_path"].apply(
-        resolve_image_path
-    )
-
-    missing = [
-        str(path)
-        for path in df["full_path"]
-        if not path.is_file()
-    ]
-
+    missing = [p for p in data["full_path"] if not Path(p).is_file()]
     if missing:
-        raise FileNotFoundError(
-            f"{len(missing)} images could not be found.\n"
-            f"Example: {missing[0]}\n"
-            "Check your extracted Data/images folder."
-        )
+        raise FileNotFoundError(f"Missing {len(missing)} images. Example: {missing[0]}")
 
-    category_to_index = {
-        name: index
-        for index, name in enumerate(CLASS_NAMES)
-    }
-
-    df["label"] = (
-        df["category"].map(category_to_index)
-    )
-
-    if df.empty:
-        raise ValueError(
-            f"No valid records in {csv_path.name}"
-        )
-
-    return df
+    # Convert category names to numbers: bottoms=0, dresses=1, shoes=2, tops=3.
+    label_numbers = {name: index for index, name in enumerate(CLASS_NAMES)}
+    data["label"] = data["category"].map(label_numbers).astype("int32")
+    return data
 
 
-# -------------------------------------------------
-# IMAGE PREPROCESSING
-# -------------------------------------------------
-
-def process_image(path, label):
-    """Load an image and scale its pixels to 0-1."""
-
-    image_bytes = tf.io.read_file(path)
-
+def read_image(path, label):
+    """Read and resize a photo; return RGB pixels between 0 and 1."""
     image = tf.io.decode_image(
-        image_bytes,
-        channels=3,
-        expand_animations=False
+        tf.io.read_file(path), channels=3, expand_animations=False
     )
-
     image.set_shape([None, None, 3])
-
-    image = tf.image.resize(
-        image,
-        IMG_SIZE
-    )
-
+    image = tf.image.resize(image, IMAGE_SIZE)
     image = tf.cast(image, tf.float32) / 255.0
-
     return image, label
 
 
-def make_dataset(df, training=False):
-    """Build a TensorFlow image dataset."""
-
-    paths = df["full_path"].astype(str).tolist()
-    labels = df["label"].astype("int32").tolist()
-
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (paths, labels)
-    )
-
+def make_dataset(data, training=False):
+    """Build batches of images for TensorFlow."""
+    dataset = tf.data.Dataset.from_tensor_slices((
+        data["full_path"].tolist(), data["label"].tolist()
+    ))
     if training:
-        dataset = dataset.shuffle(
-            buffer_size=len(df),
-            seed=SEED,
-            reshuffle_each_iteration=True
-        )
+        # Shuffle only the training data, never the validation data.
+        dataset = dataset.shuffle(len(data), seed=SEED)
+    dataset = dataset.map(read_image, num_parallel_calls=tf.data.AUTOTUNE)
+    return dataset.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
-    dataset = dataset.map(
-        process_image,
-        num_parallel_calls=tf.data.AUTOTUNE
-    )
-
-    dataset = dataset.batch(BATCH_SIZE)
-
-    dataset = dataset.prefetch(
-        tf.data.AUTOTUNE
-    )
-
-    return dataset
-
-
-# -------------------------------------------------
-# BUILD MODEL
-# -------------------------------------------------
 
 def build_model():
-    """Create a MobileNetV2 transfer-learning model."""
-
-    base_model = keras.applications.MobileNetV2(
-        input_shape=(224, 224, 3),
-        include_top=False,
-        weights="imagenet"
+    """Use a pretrained MobileNetV2 to learn our four categories."""
+    base = keras.applications.MobileNetV2(
+        input_shape=(224, 224, 3), include_top=False, weights="imagenet"
     )
+    base.trainable = False  # Train just the new category layer to start.
 
-    # Freeze pretrained layers initially.
-    base_model.trainable = False
-
-    inputs = keras.Input(
-        shape=(224, 224, 3),
-        name="clothing_image"
-    )
-
-    # Basic augmentation helps the model
-    # recognize clothing in different positions.
+    inputs = keras.Input(shape=(224, 224, 3))
+    # Random changes help the model handle slightly different photos.
     x = layers.RandomFlip("horizontal")(inputs)
-
     x = layers.RandomRotation(0.05)(x)
-
     x = layers.RandomZoom(0.1)(x)
-
-    # Input images are 0-1.
-    # MobileNetV2 internally needs -1 to 1.
-    x = layers.Rescaling(
-        scale=2.0,
-        offset=-1.0
-    )(x)
-
-    x = base_model(
-        x,
-        training=False
-    )
-
+    # MobileNetV2 expects -1 to 1; our input images are 0 to 1.
+    x = layers.Rescaling(scale=2.0, offset=-1.0)(x)
+    x = base(x, training=False)
     x = layers.GlobalAveragePooling2D()(x)
-
     x = layers.Dropout(0.3)(x)
-
-    outputs = layers.Dense(
-        NUM_CLASSES,
-        activation="softmax",
-        name="clothing_category"
-    )(x)
-
-    model = keras.Model(
-        inputs,
-        outputs,
-        name="DesignerAI_ClothingClassifier"
-    )
-
+    outputs = layers.Dense(4, activation="softmax")(x)
+    model = keras.Model(inputs, outputs, name="DesignerAI_ClothingClassifier")
     model.compile(
-        optimizer=keras.optimizers.Adam(
-            learning_rate=LEARNING_RATE
-        ),
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
         loss="sparse_categorical_crossentropy",
-        metrics=["accuracy"]
+        metrics=["accuracy"],
     )
-
     return model
 
 
-# -------------------------------------------------
-# TRAIN MODEL
-# -------------------------------------------------
-
 def main():
+    print("\nDESIGNER AI - TRAINING TOPS, BOTTOMS, DRESSES, AND SHOES")
+    train = load_csv("train.csv")
+    validation = load_csv("validation.csv")
+    print(f"Training images: {len(train)}")
+    print(f"Validation images: {len(validation)}")
+    print("\nTraining category counts:\n", train["category"].value_counts().to_string())
 
-    print("\nDESIGNER AI - MODEL TRAINING")
-    print("=" * 40)
-
-    train_df = load_data(TRAIN_CSV)
-    val_df = load_data(VAL_CSV)
-
-    # Check the train and validation splits.
-    train_ids = set(train_df["full_path"].astype(str))
-    val_ids = set(val_df["full_path"].astype(str))
-
-    overlap = train_ids.intersection(val_ids)
-
-    if overlap:
-        raise ValueError(
-            "Training and validation contain "
-            "some of the same images."
-        )
-
-    for name, df in [
-        ("Training", train_df),
-        ("Validation", val_df)
-    ]:
-        missing_categories = (
-            set(CLASS_NAMES) - set(df["category"])
-        )
-
-        if missing_categories:
-            raise ValueError(
-                f"{name} is missing categories: "
-                f"{missing_categories}"
-            )
-
-    print(f"Training images: {len(train_df)}")
-    print(f"Validation images: {len(val_df)}")
-
-    print("\nTraining category counts:")
-    print(
-        train_df["category"]
-        .value_counts()
-        .to_string()
-    )
-
-    train_dataset = make_dataset(
-        train_df,
-        training=True
-    )
-
-    val_dataset = make_dataset(
-        val_df,
-        training=False
-    )
-
-    print("\nBuilding MobileNetV2 model...")
-
+    train_data = make_dataset(train, training=True)
+    validation_data = make_dataset(validation)
     model = build_model()
 
-    model.summary()
-
-    # Save the model with the highest
-    # validation accuracy.
+    # Save whichever epoch has the highest validation accuracy.
+    # This replaces the OLD jackets model at the same path.
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath=str(MODEL_PATH),
-            monitor="val_accuracy",
-            mode="max",
-            save_best_only=True,
-            verbose=1
+            str(MODEL_FILE), monitor="val_accuracy", mode="max",
+            save_best_only=True, verbose=1
         ),
-
-        keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=3,
-            restore_best_weights=False,
-            verbose=1
-        ),
-
-        keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
-            factor=0.5,
-            patience=2,
-            min_lr=0.000001,
-            verbose=1
-        )
+        keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
+        keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=2, factor=0.5),
     ]
 
     print("\nStarting training...")
-
     history = model.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=EPOCHS,
-        callbacks=callbacks
+        train_data, validation_data=validation_data,
+        epochs=EPOCHS, callbacks=callbacks
     )
 
-    # Reload the best saved model.
-    best_model = keras.models.load_model(
-        MODEL_PATH
-    )
+    # Reload the best model, not just the last training epoch.
+    best_model = keras.models.load_model(MODEL_FILE)
+    loss, accuracy = best_model.evaluate(validation_data, verbose=0)
 
-    # Evaluate on validation data only.
-    # Keep the test dataset for final evaluation.
-    loss, accuracy = best_model.evaluate(
-        val_dataset,
-        verbose=1
-    )
+    # The evaluation file reads this JSON to avoid category-order mistakes.
+    CLASS_FILE.write_text(json.dumps(CLASS_NAMES, indent=2), encoding="utf-8")
+    pd.DataFrame(history.history).to_csv(HISTORY_FILE, index=False)
 
     print("\nTRAINING COMPLETE")
-    print("=" * 40)
-
-    print(
-        f"Best validation accuracy: {accuracy:.2%}"
-    )
-
-    print(
-        f"Validation loss: {loss:.4f}"
-    )
-
-    # Save the class order for prediction
-    # and evaluation code.
-    with CLASSES_PATH.open(
-        "w",
-        encoding="utf-8"
-    ) as file:
-        json.dump(
-            CLASS_NAMES,
-            file,
-            indent=4
-        )
-
-    # Save learning history.
-    pd.DataFrame(history.history).to_csv(
-        HISTORY_PATH,
-        index=False
-    )
-
-    print(f"\nModel saved to: {MODEL_PATH}")
-    print(f"Class names saved to: {CLASSES_PATH}")
-    print(f"History saved to: {HISTORY_PATH}")
-
-    print(
-        "\nNext: Run model_evaluation.py "
-        "against the test dataset."
-    )
+    print(f"Best validation accuracy: {accuracy:.2%}")
+    print(f"Validation loss: {loss:.4f}")
+    print(f"Model saved to: {MODEL_FILE}")
+    print(f"Class names saved to: {CLASS_FILE}")
+    print("Next: python Notebooks/modelEvaluation.py")
 
 
 if __name__ == "__main__":
