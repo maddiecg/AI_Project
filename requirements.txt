@@ -1,0 +1,19 @@
+# Designer AI - Python Dependencies
+
+# Train and load our clothing classification model
+tensorflow
+
+# Read and organize clothing datasets
+pandas
+
+# Work with image arrays and numerical data
+numpy
+
+# Open, resize, and process clothing images
+Pillow
+
+# Create graphs and confusion matrices
+matplotlib
+
+# Split datasets and evaluate model accuracy
+scikit-learn
