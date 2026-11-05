@@ -1,61 +1,36 @@
-
 """
 Designer AI - Outfit Recommendations
 
-This file recommends clothing pieces that match
-an uploaded item.
+This file combines three parts of our project:
+1. Clothing classification from predict.py
+2. Automatic color detection from color_detection.py
+3. Simple outfit suggestions based on the category and color
 
-Our AI recognizes four categories:
-- Tops
-- Bottoms
-- Dresses
-- Shoes
+Run from the main AI_Project-main folder:
+    python Backend/recommendations.py "Data/images/12345.jpg"
 
-How it works:
-1. predict.py identifies the clothing category.
-2. The user can provide the clothing item's color.
-3. This file suggests matching outfit pieces.
-4. It explains why the outfit works.
-
-We use simple clothing and color-matching rules.
-We do not need to train another AI model.
-
-Example:
-python Backend/recommendations.py "Data/images/12345.jpg" blue
+You can also override the detected color if it is incorrect:
+    python Backend/recommendations.py "Data/images/12345.jpg" blue
 """
 
 # ------------------------------------------
 # STEP 1: IMPORT LIBRARIES
 # ------------------------------------------
 
-# Path helps us work with image filenames.
+# Path lets us display the image filename.
 from pathlib import Path
 
-# sys lets us read arguments from the terminal.
+# sys lets us read command-line arguments.
 import sys
 
-# Import our existing clothing prediction function.
-# Both files are inside the Backend folder.
-# Import the clothing prediction function from our Backend folder.
-# Import our clothing prediction function.
-# Use a different import depending on how this file is run.
 
-if __name__ == "__main__":
-    # When running recommendations.py directly.
-    from predict import predict_clothing
-else:
-    # When importing recommendations from another Python file.
-    from Backend.predict import predict_clothing
 # ------------------------------------------
 # STEP 2: DEFINE COLOR MATCHING RULES
 # ------------------------------------------
 
-# This dictionary stores colors that generally
-# work well together in everyday outfits.
-#
-# The first color is the clothing item's color.
-# The list contains suggested matching colors.
-
+# These are basic styling suggestions, NOT predictions learned by the AI model.
+# The dictionary key is the color of the uploaded clothing item.
+# The corresponding list contains colors that generally coordinate with it.
 COLOR_MATCHES = {
     "black": ["white", "grey", "beige"],
     "white": ["black", "blue", "beige"],
@@ -69,249 +44,196 @@ COLOR_MATCHES = {
     "brown": ["cream", "white", "blue"],
     "beige": ["white", "navy", "brown"],
     "grey": ["black", "white", "blue"],
+    "orange": ["navy", "white", "beige"],
+    "cream": ["brown", "navy", "black"],
 }
 
-# Use neutral colors if the user enters
-# a color that is not in our dictionary.
+# Fall back to neutral suggestions when the detected color is unfamiliar.
 DEFAULT_COLORS = ["black", "white", "beige"]
 
 
 # ------------------------------------------
-# STEP 3: FIND MATCHING COLORS
+# STEP 3: FIND COORDINATING COLORS
 # ------------------------------------------
 
-def get_matching_colors(color):
-    """
-    Find colors that match an uploaded item.
+def get_matching_colors(color: str) -> list[str]:
+    """Return a list of colors that generally match the given color."""
 
-    Example:
-    Input: "blue"
-    Output: ["white", "beige", "grey"]
-    """
-
-    # Convert the color to lowercase.
-    # This lets "Blue" and "blue" work the same.
+    # Remove extra spaces and make capitalization consistent.
     color = color.strip().lower()
 
-    # Handle a few common alternative names.
+    # Accept common alternate names.
     if color == "navy blue":
         color = "navy"
-
-    if color == "gray":
+    elif color == "gray":
         color = "grey"
 
-    # Return matching colors.
-    # Use default colors if the color is unknown.
-    return COLOR_MATCHES.get(
-        color,
-        DEFAULT_COLORS
-    )
+    # If we don't recognize the color, use neutral colors instead.
+    return COLOR_MATCHES.get(color, DEFAULT_COLORS)
 
 
 # ------------------------------------------
-# STEP 4: RECOMMEND OUTFIT PIECES
+# STEP 4: RECOMMEND CLOTHING PIECES
 # ------------------------------------------
 
-def recommend_outfit(category, color):
+def recommend_outfit(category: str, color: str) -> dict:
     """
-    Recommend clothing based on category and color.
+    Suggest clothing pieces to go with the given item.
 
-    Returns a dictionary containing:
-    - The uploaded clothing category
-    - The uploaded item's color
-    - Suggested outfit pieces
-    - An explanation
+    category: tops, bottoms, dresses, or shoes
+    color: the provided or automatically detected color
+
+    Returns a dictionary that the website can eventually display.
     """
 
-    # Standardize category and color names.
+    # Standardize the inputs so 'Tops' and 'tops' behave the same way.
     category = category.strip().lower()
     color = color.strip().lower()
 
-    # Find colors that coordinate with the item.
+    # Get matching color choices from our dictionary.
     colors = get_matching_colors(color)
 
-    # Store our recommendations here.
-    recommendations = []
-
-    # --------------------------------------
-    # IF THE UPLOADED ITEM IS A TOP
-    # --------------------------------------
-
+    # Generate different recommendations depending on the clothing type.
     if category == "tops":
-
-        # Recommend bottoms and shoes.
         recommendations = [
             f"{colors[0]} pants or jeans",
-            f"{colors[1]} sneakers"
+            f"{colors[1]} sneakers",
         ]
-
         explanation = (
-            "Pairing your top with coordinating bottoms "
-            "and shoes creates a balanced casual outfit."
+            "Pairing your top with coordinating bottoms and shoes "
+            "creates a balanced casual outfit."
         )
-
-    # --------------------------------------
-    # IF THE UPLOADED ITEM IS A BOTTOM
-    # --------------------------------------
 
     elif category == "bottoms":
-
-        # Recommend a shirt and shoes.
         recommendations = [
             f"{colors[0]} shirt or blouse",
-            f"{colors[1]} sneakers"
+            f"{colors[1]} sneakers",
         ]
-
         explanation = (
-            "A coordinating top and neutral shoes "
-            "help complete the outfit."
+            "A coordinating top and neutral shoes help complete the outfit."
         )
-
-    # --------------------------------------
-    # IF THE UPLOADED ITEM IS A DRESS
-    # --------------------------------------
 
     elif category == "dresses":
-
-        # Dresses can be paired with footwear
-        # and accessories.
         recommendations = [
             f"{colors[0]} sandals or heels",
-            f"{colors[1]} handbag"
+            f"{colors[1]} handbag",
         ]
-
         explanation = (
-            "Simple footwear and accessories "
-            "complement a dress without overpowering it."
+            "Simple footwear and accessories complement a dress "
+            "without overpowering it."
         )
 
-    # --------------------------------------
-    # IF THE UPLOADED ITEM IS A SHOE
-    # --------------------------------------
-
     elif category == "shoes":
-
-        # Recommend a top and bottoms.
         recommendations = [
             f"{colors[0]} pants or jeans",
-            f"{colors[1]} top"
+            f"{colors[1]} top",
         ]
-
         explanation = (
             "Coordinating your clothing with your shoes "
             "helps create a complete outfit."
         )
 
-    # --------------------------------------
-    # HANDLE UNKNOWN CATEGORIES
-    # --------------------------------------
-
     else:
-        raise ValueError(
-            f"Unknown clothing category: {category}"
-        )
+        # Only the four categories used by our trained model are supported.
+        raise ValueError(f"Unknown clothing category: {category}")
 
-    # Return all recommendation information.
+    # Keep all results together so another file (or the website) can use them.
     return {
         "category": category,
         "color": color,
         "recommendations": recommendations,
-        "explanation": explanation
+        "explanation": explanation,
     }
 
 
 # ------------------------------------------
-# STEP 5: CONNECT TO OUR TRAINED AI MODEL
+# STEP 5: CONNECT PREDICTION + COLOR DETECTION
 # ------------------------------------------
 
-def recommend_from_image(image_path, color):
+def recommend_from_image(image_path: str, color: str | None = None) -> dict:
     """
-    Predict the category of an uploaded image
-    and generate outfit recommendations.
+    Classify a clothing image and generate outfit suggestions.
 
-    This connects predict.py with our
-    recommendation rules.
+    If color is not supplied, detect it automatically.
+    If color IS supplied, use it as a manual override.
     """
 
-    # Use our existing trained model to
-    # identify the clothing category.
-    category, confidence = predict_clothing(
-        image_path
-    )
+    # These imports work whether this file is run directly from the terminal
+    # or imported as Backend.recommendations in another Python file.
+    # Importing here also avoids loading TensorFlow for simple rule-only tests.
+    if __package__:
+        from .predict import predict_clothing
+        from .color_detection import detect_color
+    else:
+        from predict import predict_clothing
+        from color_detection import detect_color
 
-    # Generate outfit recommendations using
-    # the predicted category and given color.
-    outfit = recommend_outfit(
-        category,
-        color
-    )
+    # Ask our trained model which clothing category is pictured.
+    category, confidence = predict_clothing(image_path)
 
-    # Include the prediction confidence.
+    # If the user did not type a color, analyze the image's pixels.
+    if color is None:
+        color = detect_color(image_path)
+
+    # Use the category and color to suggest matching pieces.
+    outfit = recommend_outfit(category, color)
+
+    # Save the model's confidence score in the result for display.
     outfit["confidence"] = confidence
 
     return outfit
 
 
 # ------------------------------------------
-# STEP 6: RUN THE PROGRAM
+# STEP 6: RUN THE PROGRAM FROM THE TERMINAL
 # ------------------------------------------
 
-def main():
-    """Test outfit recommendations in the terminal."""
+def main() -> None:
+    """Read an image path, make recommendations, and print the results."""
 
     print("\nDESIGNER AI - OUTFIT RECOMMENDATIONS")
     print("------------------------------------")
 
-    # We need both an image and a color.
-    if len(sys.argv) < 3:
+    # Only the image path is required; a manual color is optional.
+    if len(sys.argv) < 2:
         print(
             'Usage: python Backend/recommendations.py '
-            '"image.jpg" "color"'
+            '"image.jpg" [optional_color]'
         )
         return
 
-    # Get the image path entered by the user.
+    # First terminal argument: image location.
     image_path = sys.argv[1]
 
-    # Get the clothing item's color.
-    color = sys.argv[2]
+    # Second argument: optional color override.
+    # None tells our program to detect the color from the image.
+    color = sys.argv[2] if len(sys.argv) >= 3 else None
 
-    # Predict the category and recommend an outfit.
-    result = recommend_from_image(
-        image_path,
-        color
-    )
+    # Run classification, color detection, and recommendation rules.
+    result = recommend_from_image(image_path, color)
 
-    # --------------------------------------
-    # DISPLAY THE RESULTS
-    # --------------------------------------
-
+    # Show the category and confidence predicted by our AI model.
     print(f"\nImage: {Path(image_path).name}")
+    print(f"Predicted category: {result['category']}")
+    print(f"Prediction confidence: {result['confidence']:.2f}%")
 
-    print(
-        f"Predicted category: {result['category']}"
-    )
+    # Explain whether we detected or manually supplied the color.
+    color_label = "Detected color" if color is None else "Provided color"
+    print(f"{color_label}: {result['color']}")
 
-    print(
-        f"Prediction confidence: "
-        f"{result['confidence']:.2f}%"
-    )
-
-    print(f"Item color: {result['color']}")
-
+    # Print each recommended outfit item on its own line.
     print("\nRecommended outfit pieces:")
-
-    # Display each recommended item.
     for item in result["recommendations"]:
         print(f"- {item}")
 
-    # Explain why the outfit works.
+    # Display the explanation for the outfit suggestions.
     print("\nWhy this outfit works:")
     print(result["explanation"])
-
     print("\nRecommendation complete!")
 
 
-# Run the program when executed directly.
+# Only execute the terminal program when this file is run directly.
+# This allows teammates to import its functions without starting main().
 if __name__ == "__main__":
     main()
+
