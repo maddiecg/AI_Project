@@ -1,0 +1,13 @@
+Designer AI Model Evaluation
+Accuracy: 98.29%
+
+              precision    recall  f1-score   support
+
+     bottoms       0.99      0.97      0.98       376
+     dresses       0.60      0.38      0.46        69
+       shoes       1.00      1.00      1.00      1385
+        tops       0.98      0.99      0.99      2202
+
+    accuracy                           0.98      4032
+   macro avg       0.89      0.84      0.86      4032
+weighted avg       0.98      0.98      0.98      4032
