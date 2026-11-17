@@ -38,6 +38,9 @@ import sys
 # json allows us to read the class names.
 import json
 
+#Make sure the model does not reload on every request
+from functools import lru_cache
+
 # NumPy converts images into arrays of numbers.
 import numpy as np
 
@@ -69,7 +72,7 @@ IMAGE_SIZE = (224, 224)
 # ------------------------------------------
 # STEP 3: LOAD THE TRAINED MODEL
 # ------------------------------------------
-
+@lru_cache(maxsize=1) 
 def load_clothing_model():
     """
     Load our trained AI model and clothing categories.

@@ -17,3 +17,8 @@ matplotlib
 
 # Split datasets and evaluate model accuracy
 scikit-learn
+
+# Run the website and API
+fastapi
+uvicorn[standard]
+python-multipart
