@@ -1,7 +1,7 @@
 # Designer AI - Python Dependencies
 
 # Train and load our clothing classification model
-tensorflow
+tensorflow==2.21.0
 
 # Read and organize clothing datasets
 pandas
