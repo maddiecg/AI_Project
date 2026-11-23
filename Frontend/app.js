@@ -100,14 +100,29 @@ if ("IntersectionObserver" in window) {
 const uploadInput = document.querySelector("#upload-input");
 const uploadButton = document.querySelector("#upload-button");
 const resultBox = document.querySelector("#result");
+const pieceImage = document.querySelector("#piece-image-preview");
+let uploadedPieceUrl = null;
 
-uploadButton.addEventListener("click", () => uploadInput.click());
+if (uploadButton && uploadInput) {
+    uploadButton.addEventListener("click", () => uploadInput.click());
+}
 
-uploadInput.addEventListener("change", async () => {
-    const file = uploadInput.files[0];
-    if (!file) return;
+if (uploadInput) {
+    uploadInput.addEventListener("change", async () => {
+        const file = uploadInput.files[0];
+        if (!file) return;
 
-    resultBox.textContent = "Styling your piece…";
+        // Update the "YOUR PIECE" preview as soon as an image is selected.
+        if (file.type.startsWith("image/") && pieceImage) {
+            if (uploadedPieceUrl) URL.revokeObjectURL(uploadedPieceUrl);
+            uploadedPieceUrl = URL.createObjectURL(file);
+            pieceImage.src = uploadedPieceUrl;
+            pieceImage.alt = `Uploaded clothing piece: ${file.name}`;
+            pieceImage.classList.remove("image-unavailable");
+        }
+
+        if (!resultBox) return;
+        resultBox.textContent = "Styling your piece…";
     const formData = new FormData();
     formData.append("image", file);
 
@@ -131,4 +146,5 @@ uploadInput.addEventListener("change", async () => {
     } catch (err) {
         resultBox.textContent = err.message;
     }
-});
+    });
+}

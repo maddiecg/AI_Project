@@ -741,3 +741,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pixel-sparkle { animation: none; }
 }
+
+#result { margin-top: 16px; color: var(--berry); font-family: var(--pixel); font-size: 10px; line-height: 1.7;}
+#result p { margin: 0 0 10px;}
+#result p:first-child { color: var(--berry); font-weight: 600;}
+#result p:last-child {color: #806b77;}
+#result ul { margin: 8px 0 12px; padding-left: 18px;}
+#result li { margin-bottom: 5px; padding-left: 2px;}
